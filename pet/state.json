@@ -1,0 +1,12 @@
+{
+  "pet": {
+    "mood": "neutral",
+    "personality": "chill",
+    "streakDays": 0,
+    "completionRate": 0,
+    "lastInteractionMs": 0,
+    "totalInteractions": 0
+  },
+  "todos": [],
+  "nextTodoId": 1
+}
