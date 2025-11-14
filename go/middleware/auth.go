@@ -9,9 +9,13 @@ import (
 
 type ctxKey string
 
-const UserIDKey ctxKey = "userId"
+const userClaimsKey ctxKey = "userClaims"
 
-func AuthMiddleware(jwtSecret string, next http.Handler) http.Handler {
+func UserClaimsKey() ctxKey {
+	return userClaimsKey
+}
+
+func AuthMiddleware(secret string, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		cookie, err := r.Cookie("ppet_token")
 		if err != nil || cookie.Value == "" {
@@ -19,20 +23,20 @@ func AuthMiddleware(jwtSecret string, next http.Handler) http.Handler {
 			return
 		}
 
-		claims, err := api.ParseAndValidateJWT(jwtSecret, cookie.Value)
+		claims, err := api.ParseAndValidateJWT(secret, cookie.Value)
 		if err != nil {
 			http.Error(w, "invalid token", http.StatusUnauthorized)
 			return
 		}
 
-		ctx := context.WithValue(r.Context(), UserIDKey, claims.UserID)
+		ctx := context.WithValue(r.Context(), userClaimsKey, claims)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
 
 // Helper to get userId in handlers
 func GetUserID(r *http.Request) (string, bool) {
-	v := r.Context().Value(UserIDKey)
+	v := r.Context().Value(userClaimsKey)
 	if v == nil {
 		return "", false
 	}

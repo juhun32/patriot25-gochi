@@ -43,7 +43,7 @@ func (r *UserRepo) UpsertUser(ctx context.Context, user *models.User) error {
 	return err
 }
 
-func (r *UserRepo) GetUser(ctx context.Context, userID string) (*models.User, error) {
+func (r *UserRepo) GetUserByID(ctx context.Context, userID string) (*models.User, error) {
 	key, err := attributevalue.MarshalMap(map[string]string{
 		"userId": userID,
 	})

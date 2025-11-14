@@ -23,7 +23,7 @@ func main() {
 	userRepo := repo.NewUserRepo(dynamo.Client, cfg.UsersTable)
 	authHandler := api.NewAuthHandler(googleClient, userRepo, cfg.JWTSecret, "http://localhost:3000")
 
-	router := route.NewRouter(authHandler, handlers.NewTodosHandler((*repo.TodoRepo)(userRepo)), cfg.JWTSecret)
+	router := route.NewRouter(authHandler, handlers.NewTodosHandler((*repo.TodoRepo)(userRepo)), handlers.NewUserHandler((*repo.UserRepo)(userRepo)), cfg.JWTSecret)
 
 	addr := ":8080"
 	log.Println("Server listening on", addr)
