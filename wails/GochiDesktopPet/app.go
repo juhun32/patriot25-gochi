@@ -1,41 +1,81 @@
 package main
-import "context"
+
+import (
+	"context"
+	"fmt"
+)
+
 type App struct {
-    Tasks     []string
-    Completed int
+	ctx       context.Context
+	Tasks     []string
+	Completed int
+}
+
+func NewApp() *App {
+	return &App{
+		Tasks:     []string{},
+		Completed: 0,
+	}
 }
 
 func (a *App) Startup(ctx context.Context) {
-    // Called when the app starts. You can initialize tasks here.
-    a.Tasks = []string{}
-    a.Completed = 0
+	a.ctx = ctx
+	a.Tasks = []string{}
+	a.Completed = 0
 }
 
-
-func NewApp() *App {
-    return &App{
-        Tasks: []string{},
-    }
+func (a *App) AddTask(task string) error {
+	if task == "" {
+		return fmt.Errorf("task cannot be empty")
+	}
+	a.Tasks = append(a.Tasks, task)
+	fmt.Printf("Task added: %s. Total tasks: %d\n", task, len(a.Tasks))
+	return nil
 }
 
-func (a *App) AddTask(task string) {
-    a.Tasks = append(a.Tasks, task)
+func (a *App) CompleteTask(index int) error {
+	if index < 0 || index >= len(a.Tasks) {
+		return fmt.Errorf("invalid task index: %d", index)
+	}
+	
+	// Remove task at index
+	a.Tasks = append(a.Tasks[:index], a.Tasks[index+1:]...)
+	a.Completed++
+	
+	fmt.Printf("Task completed. Remaining tasks: %d, Total completed: %d\n", len(a.Tasks), a.Completed)
+	return nil
 }
 
-func (a *App) CompleteTask(index int) {
-    if index >= 0 && index < len(a.Tasks) {
-        a.Completed++
-        a.Tasks = append(a.Tasks[:index], a.Tasks[index+1:]...)
-    }
+func (a *App) GetTasks() []string {
+	return a.Tasks
 }
 
 func (a *App) Mood() string {
-    if a.Completed == 0 {
-        return "Sad :("
-    } else if a.Completed < len(a.Tasks)/2 {
-        return "Neutral."
-    } else {
-        return "Happy!"
-    }
+	totalTasks := len(a.Tasks)
+	
+	// No tasks completed yet
+	if a.Completed == 0 {
+		if totalTasks == 0 {
+			return "Neutral."
+		}
+		return "Sad :("
+	}
+	
+	// Calculate completion ratio
+	if totalTasks == 0 {
+		// All tasks completed!
+		return "Happy!"
+	}
+	
+	// If more tasks completed than remaining
+	if a.Completed > totalTasks {
+		return "Happy!"
+	}
+	
+	// If about half done
+	if a.Completed >= totalTasks/2 {
+		return "Getting better..."
+	}
+	
+	return "Keep going!"
 }
-
