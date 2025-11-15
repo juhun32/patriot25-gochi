@@ -10,6 +10,10 @@ export function CompleteTask(arg1) {
   return window['go']['main']['App']['CompleteTask'](arg1);
 }
 
+export function GetTasks() {
+  return window['go']['main']['App']['GetTasks']();
+}
+
 export function Mood() {
   return window['go']['main']['App']['Mood']();
 }

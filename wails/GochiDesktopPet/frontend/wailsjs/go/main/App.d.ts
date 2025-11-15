@@ -5,4 +5,6 @@ export function AddTask(arg1:string):Promise<void>;
 
 export function CompleteTask(arg1:number):Promise<void>;
 
+export function GetTasks():Promise<Array<string>>;
+
 export function Mood():Promise<string>;
