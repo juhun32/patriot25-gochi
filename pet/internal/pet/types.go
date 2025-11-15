@@ -4,7 +4,7 @@ type Mood string
 type Personality string
 
 const (
-	MoodGrumpy  Mood = "grumpy"
+	MoodGrumpy  Mood = "sad"
 	MoodNeutral Mood = "neutral"
 	MoodGolden  Mood = "golden"
 )

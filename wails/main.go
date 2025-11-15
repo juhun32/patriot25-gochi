@@ -2,6 +2,8 @@ package main
 
 import (
 	"embed"
+	"log"
+	"os"
 
 	"github.com/wailsapp/wails/v2"
 	"github.com/wailsapp/wails/v2/pkg/options"
@@ -13,29 +15,47 @@ import (
 var assets embed.FS
 
 func main() {
+	f, er := os.Create("gochi.log")
+	if er == nil {
+		log.SetOutput(f)
+		defer f.Close()
+	}
+
 	app := NewApp()
 
 	err := wails.Run(&options.App{
-		Title:  "Gochi!",
-		Width:  300,
-		Height: 300,
-		MinWidth:  250,
-		MinHeight: 250,
+		Title:     "Gochi",
+		Width:     366,
+		Height:    190,
+		MinWidth:  366,
+		MinHeight: 190,
+
+		Frameless:       false,
+		CSSDragProperty: "widows",
+		CSSDragValue:    "1",
+		AlwaysOnTop:     false,
+		BackgroundColour: &options.RGBA{
+			R: 0,
+			G: 0,
+			B: 0,
+			A: 0,
+		},
+
 		AssetServer: &assetserver.Options{
 			Assets: assets,
 		},
-		BackgroundColour: &options.RGBA{R: 0, G: 0, B: 0, A: 0},
-		OnStartup:        app.Startup,
+
+		OnStartup: app.Startup,
+
 		Bind: []interface{}{
 			app,
 		},
+
 		Windows: &windows.Options{
 			WebviewIsTransparent: true,
 			WindowIsTranslucent:  true,
-			BackdropType:         windows.Mica,
+			BackdropType:         windows.None,
 		},
-		Frameless: false,
-		AlwaysOnTop: true,
 	})
 
 	if err != nil {

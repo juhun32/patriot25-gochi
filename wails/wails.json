@@ -1,0 +1,23 @@
+{
+    "$schema": "https://wails.io/schemas/config.v2.json",
+    "name": "Gochi",
+    "outputfilename": "Gochi",
+    "windows": {
+        "width": 200,
+        "height": 400,
+        "transparent": true,
+        "decorated": false,
+        "alwaysOnTop": false,
+        "resizable": false,
+        "disableMaximize": true,
+        "frameless": false
+    },
+    "frontend:install": "npm install",
+    "frontend:build": "npm run build",
+    "frontend:dev:watcher": "npm run dev",
+    "frontend:dev:serverUrl": "auto",
+    "author": {
+        "name": "",
+        "email": ""
+    }
+}

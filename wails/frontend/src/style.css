@@ -1,22 +1,23 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 @font-face {
-    font-family: 'Nougat-ExtraBlack';
-    src: url('/assets/fonts/Nougat-ExtraBlack.ttf') format("truetype");
+    font-family: "Nougat-ExtraBlack";
+    src: url("/assets/fonts/Nougat-ExtraBlack.ttf") format("truetype");
     font-weight: 900;
     font-style: normal;
 }
 
 @font-face {
-    font-family: 'CustomDefaultFont';
-    src: url('/assets/fonts/AlteHaasGroteskRegular.ttf') format("truetype");
+    font-family: "CustomDefaultFont";
+    src: url("/assets/fonts/AlteHaasGroteskRegular.ttf") format("truetype");
     font-weight: normal;
     font-style: normal;
 }
 
-* {
-    box-sizing: border-box;
-}
-
-html, body {
+html,
+body {
     margin: 0;
     padding: 0;
     width: 100%;
@@ -29,16 +30,20 @@ html, body {
     width: 100%;
     height: 100%;
     background: transparent;
-    font-family: 'CustomDefaultFont', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-family: "CustomDefaultFont", -apple-system, BlinkMacSystemFont,
+        "Segoe UI", sans-serif;
+}
+
+/* * {
+    box-sizing: border-box;
 }
 
 #pet {
     width: 100%;
     height: 100%;
-    background: linear-gradient(135deg, #FF6B9D 0%, #FEC163 50%, #FFD93D 100%);
+    background: linear-gradient(135deg, #ff6b9d 0%, #fec163 50%, #ffd93d 100%);
     border-radius: 16px;
-    box-shadow: 
-        0 8px 32px rgba(255, 107, 157, 0.4),
+    box-shadow: 0 8px 32px rgba(255, 107, 157, 0.4),
         inset 0 2px 8px rgba(255, 255, 255, 0.3);
     display: flex;
     flex-direction: column;
@@ -49,15 +54,22 @@ html, body {
 }
 
 #pet::before {
-    content: '';
+    content: "";
     position: absolute;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
-    background: 
-        radial-gradient(circle at 20% 30%, rgba(255, 255, 255, 0.15) 0%, transparent 50%),
-        radial-gradient(circle at 80% 70%, rgba(255, 107, 157, 0.2) 0%, transparent 50%);
+    background: radial-gradient(
+            circle at 20% 30%,
+            rgba(255, 255, 255, 0.15) 0%,
+            transparent 50%
+        ),
+        radial-gradient(
+            circle at 80% 70%,
+            rgba(255, 107, 157, 0.2) 0%,
+            transparent 50%
+        );
     border-radius: 16px;
     pointer-events: none;
 }
@@ -70,13 +82,11 @@ html, body {
 }
 
 .pet-title {
-    font-family: 'Nougat-ExtraBlack', sans-serif;
+    font-family: "Nougat-ExtraBlack", sans-serif;
     font-size: 32px;
     font-weight: 900;
     margin: 0 0 12px 0;
-    text-shadow: 
-        2px 2px 0 rgba(0, 0, 0, 0.2),
-        0 0 20px rgba(255, 255, 255, 0.5);
+    text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.2), 0 0 20px rgba(255, 255, 255, 0.5);
     letter-spacing: 1px;
     color: #fff;
 }
@@ -121,7 +131,7 @@ html, body {
     border: 2px solid rgba(255, 255, 255, 0.3);
     border-radius: 14px;
     background: rgba(255, 255, 255, 0.9);
-    color: #FF6B9D;
+    color: #ff6b9d;
     font-size: 13px;
     font-weight: 500;
     outline: none;
@@ -130,7 +140,7 @@ html, body {
 }
 
 .task-input::placeholder {
-    color: #FFB6D0;
+    color: #ffb6d0;
 }
 
 .task-input:focus {
@@ -283,4 +293,4 @@ html, body {
     border: 1px solid rgba(255, 255, 255, 0.2);
     position: relative;
     z-index: 1;
-}
+} */

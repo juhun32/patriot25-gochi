@@ -37,11 +37,11 @@ func (a *App) CompleteTask(index int) error {
 	if index < 0 || index >= len(a.Tasks) {
 		return fmt.Errorf("invalid task index: %d", index)
 	}
-	
+
 	// Remove task at index
 	a.Tasks = append(a.Tasks[:index], a.Tasks[index+1:]...)
 	a.Completed++
-	
+
 	fmt.Printf("Task completed. Remaining tasks: %d, Total completed: %d\n", len(a.Tasks), a.Completed)
 	return nil
 }
@@ -52,30 +52,30 @@ func (a *App) GetTasks() []string {
 
 func (a *App) Mood() string {
 	totalTasks := len(a.Tasks)
-	
+
 	// No tasks completed yet
 	if a.Completed == 0 {
 		if totalTasks == 0 {
-			return "Neutral."
+			return "neutral"
 		}
-		return "Sad :("
+		return "sad"
 	}
-	
-	// Calculate completion ratio
+
+	// calculate completion ratio
 	if totalTasks == 0 {
-		// All tasks completed!
-		return "Happy!"
+		// all tasks completed
+		return "golden"
 	}
-	
+
 	// If more tasks completed than remaining
 	if a.Completed > totalTasks {
-		return "Happy!"
+		return "golden"
 	}
-	
+
 	// If about half done
 	if a.Completed >= totalTasks/2 {
-		return "Getting better..."
+		return "neutral"
 	}
-	
-	return "Keep going!"
+
+	return "sad"
 }
