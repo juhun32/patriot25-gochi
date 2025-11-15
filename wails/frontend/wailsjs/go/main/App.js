@@ -10,10 +10,26 @@ export function CompleteTask(arg1) {
   return window['go']['main']['App']['CompleteTask'](arg1);
 }
 
+export function FeedPet() {
+  return window['go']['main']['App']['FeedPet']();
+}
+
+export function GetPetState() {
+  return window['go']['main']['App']['GetPetState']();
+}
+
 export function GetTasks() {
   return window['go']['main']['App']['GetTasks']();
 }
 
+export function GiveTreat() {
+  return window['go']['main']['App']['GiveTreat']();
+}
+
 export function Mood() {
   return window['go']['main']['App']['Mood']();
+}
+
+export function PutPetToSleep() {
+  return window['go']['main']['App']['PutPetToSleep']();
 }

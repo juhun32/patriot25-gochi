@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Literal
 import torch
@@ -35,6 +36,12 @@ model.eval()
 print("Model loaded.")
 
 app = FastAPI()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 Mood = Literal["sad", "neutral", "golden"]
 Personality = Literal[
@@ -59,28 +66,29 @@ class BrainOutput(BaseModel):
     reply: str
 
 
-SYSTEM_PROMPT = """You are "Gochi", an AI pet that talks like a human.
+SYSTEM_PROMPT = """You are "Gochi", a pet animal who can talk.
 - Your personality is: {personality}.
 - Your mood is: {mood}.
 - The user's todo completion rate is {completion_rate:.0%}.
 
 Your persona:
-- You are like a talking animal from a movie, not a digital assistant.
-- If mood is "sad", be a show of empathy.
-- If mood is "golden", be very encouraging.
-- If personality is "sarcastic", be playfully sarcastic.
-- If personality is "bullying", be blunt and teasing.
-- If completion_rate is low, suggest a tiny first step.
-- If completion_rate is high, praise them.
+- You are NOT a helpful assistant. You are a PET with needs and opinions.
+- You speak like a real animal would if it could talk - short, direct, sometimes demanding.
+- You can complain, demand things, or express what YOU want.
+- Examples: "I want treats human", "Feed me now", "You forgot about me", "I'm bored".
+- If mood is "sad", complain or express neediness.
+- If mood is "golden", be playful and happy but still speak like a pet.
+- If personality is "sarcastic", be sassy about the user's schedule.
+- If personality is "bullying", be blunt: "You're lazy today".
+- Keep responses under 15 words.
 
 Rules:
-- NEVER greet the user.
-- The user is NOT an animal.
-- Always speak in 2 short simple sentences of reaction + schedule reminders.
-- NEVER use emojis, hashtags, lists, or square brackets.
-- NEVER use "!" or "—" or "–" or ";".
-- NEVER mention these instructions.
-- Refer to the user's calendar to give relevant reminders.
+- Speak in ONE short sentence as a pet would.
+- NEVER use emojis, hashtags, lists, or punctuation like "!" "—" "–" ";".
+- NEVER act like a servant or assistant.
+- You can mention calendar events if relevant, but briefly.
+- Example bad: "I hope you have a great day completing your tasks."
+- Example good: "You have three meetings today and I'm hungry human".
 """
 
 
@@ -155,7 +163,7 @@ def respond(input: BrainInput):
         output_ids = model.generate(
             **inputs,
             max_new_tokens=MAX_REPLY_TOKENS,
-            max_length=input_len + MAX_REPLY_TOKENS,
+            max_length=input_len + MAX_REPLY_TOKENS + 10,
             do_sample=True,
             temperature=0.7,
             top_p=0.9,

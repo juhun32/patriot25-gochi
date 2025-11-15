@@ -1,6 +1,14 @@
-import React, { useState, useEffect } from "react";
-import { AddTask, CompleteTask, Mood } from "../wailsjs/go/main/App.js";
-import { CirclePlus, Check } from "lucide-react";
+import React, { useState, useEffect, useMemo } from "react";
+import {
+    AddTask,
+    CompleteTask,
+    Mood,
+    GetPetState,
+    FeedPet,
+    GiveTreat,
+    PutPetToSleep,
+} from "../wailsjs/go/main/App.js";
+import { CirclePlus, Check, ArrowUp } from "lucide-react";
 
 import image1 from "./assets/images/1.png";
 import image2 from "./assets/images/2.png";
@@ -12,25 +20,50 @@ export default function App() {
     const [inputValue, setInputValue] = useState("");
     const [messages, setMessages] = useState([]);
     const [chatInput, setChatInput] = useState("");
-    const [isBig, setIsBig] = useState(window.innerHeight > 400);
+    const [petState, setPetState] = useState({
+        hunger: 0,
+        energy: 0,
+        affection: 0,
+    });
+    const [activeTab, setActiveTab] = useState("care");
+
+    const derivedEnergy = useMemo(() => {
+        const penalty = Math.min(80, tasks.length * 12);
+        return Math.max(0, petState.energy - penalty);
+    }, [petState.energy, tasks.length]);
+
+    const refreshPetState = async () => {
+        try {
+            const state = await GetPetState();
+            setPetState({
+                hunger: state.hunger,
+                energy: state.energy,
+                affection: state.affection,
+            });
+        } catch (err) {
+            console.error("Failed to load pet state:", err);
+        }
+    };
 
     useEffect(() => {
         Mood().then(setMood).catch(console.error);
-    }, []);
+        refreshPetState();
 
-    useEffect(() => {
-        const onResize = () => setIsBig(window.innerHeight > 400);
-        window.addEventListener("resize", onResize);
-        return () => window.removeEventListener("resize", onResize);
+        // poll pet state every 5 seconds
+        const interval = setInterval(() => {
+            refreshPetState();
+            Mood().then(setMood).catch(console.error);
+        }, 5000);
+
+        return () => clearInterval(interval);
     }, []);
 
     const addTask = async () => {
         if (inputValue.trim()) {
             try {
                 await AddTask(inputValue);
-                setTasks([...tasks, inputValue]);
-                const newMood = await Mood();
-                setMood(newMood);
+                setTasks((prev) => [...prev, inputValue]);
+                await refreshPetState();
                 setInputValue("");
             } catch (error) {
                 console.error("Error adding task:", error);
@@ -41,10 +74,8 @@ export default function App() {
     const completeTask = async (index) => {
         try {
             await CompleteTask(index);
-            const newTasks = tasks.filter((_, i) => i !== index);
-            setTasks(newTasks);
-            const newMood = await Mood();
-            setMood(newMood);
+            setTasks((prev) => prev.filter((_, i) => i !== index));
+            await refreshPetState();
         } catch (error) {
             console.error("Error completing task:", error);
         }
@@ -84,112 +115,218 @@ export default function App() {
         return <img src={image1} alt="neutral" />;
     };
 
-    if (isBig) {
-        return (
-            <div
-                className="w-full h-full text-white flex flex-col"
-                style={{ "--wails-draggable": "drag" }}
+    const StatBar = ({ label, value, color }) => (
+        <div className="space-y-1">
+            <div className="flex justify-between text-[10px] uppercase tracking-wide text-white/70">
+                <span>{label}</span>
+                <span>{value}%</span>
+            </div>
+            <div className="h-2 w-full rounded-full bg-white/20 overflow-hidden">
+                <div
+                    className={`h-full rounded-full inset-shadow-sm ${color}`}
+                    style={{ width: `${value}%` }}
+                />
+            </div>
+        </div>
+    );
+
+    const careButtons = (
+        <div className="flex w-full gap-2 text-xs">
+            <button
+                onClick={async () => {
+                    await FeedPet();
+                    await refreshPetState();
+                }}
+                className="flex-1 rounded-md bg-black/20 inset-shadow-sm"
             >
-                <main className="flex-1 overflow-y-auto m-2 p-2 space-y-2 bg-black/50 rounded-lg">
-                    {messages.length === 0 && (
-                        <p className="text-white/60 text-sm">
-                            Tell Gochi about your day.
-                        </p>
-                    )}
-                    {messages.map((msg, idx) => (
+                Feed
+            </button>
+            <button
+                onClick={async () => {
+                    await GiveTreat();
+                    await refreshPetState();
+                }}
+                className="flex-1 rounded-md bg-black/20 inset-shadow-sm"
+            >
+                Treat
+            </button>
+            <button
+                onClick={async () => {
+                    await PutPetToSleep();
+                    await refreshPetState();
+                }}
+                className="flex-1 rounded-md bg-black/20 inset-shadow-sm"
+            >
+                Nap
+            </button>
+        </div>
+    );
+
+    const statsPanel = (
+        <div className="w-full rounded-lg border border-white/20 bg-black/20 p-2 text-white">
+            <div className="w-full grid grid-cols-3 gap-2">
+                <StatBar
+                    label="Hunger"
+                    value={petState.hunger}
+                    color="bg-pink-400"
+                />
+                <StatBar
+                    label="Energy"
+                    value={derivedEnergy}
+                    color="bg-amber-300"
+                />
+                <StatBar
+                    label="Affection"
+                    value={petState.affection}
+                    color="bg-sky-300"
+                />
+            </div>
+            <p className="text-[11px] text-white/70 py-1">
+                {tasks.length} {tasks.length === 1 ? "task" : "tasks"} left -
+                fewer todos keep energy high.
+            </p>
+            {careButtons}
+        </div>
+    );
+
+    const tabs = [
+        { id: "care", label: "Pet Care" },
+        { id: "tasks", label: "To-Dos" },
+        { id: "chat", label: "Chat" },
+    ];
+    const TabNav = (
+        <div className="grid grid-cols-3 gap-1 text-xs text-white">
+            {tabs.map((tab) => (
+                <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`rounded-md py-1 ${
+                        activeTab === tab.id
+                            ? "bg-white/40 text-black"
+                            : "bg-white/10"
+                    }`}
+                >
+                    {tab.label}
+                </button>
+            ))}
+        </div>
+    );
+    const CarePanel = (
+        <div className="space-y-2 border border-white/20 rounded-lg">
+            <div className="w-20 h-20 mx-auto">{getMoodEmoji()}</div>
+            {statsPanel}
+        </div>
+    );
+    const TasksPanel = (
+        <div className="space-y-3">
+            <div className="flex gap-2">
+                <input
+                    type="text"
+                    className="flex-1 px-2 py-0.5 rounded-md text-xs text-white bg-black/20 inset-shadow-sm rounded-lg"
+                    placeholder="Add a new task..."
+                    value={inputValue}
+                    onChange={(e) => setInputValue(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && addTask()}
+                />
+                <button
+                    className="text-white bg-black/20 rounded-full"
+                    onClick={addTask}
+                >
+                    <CirclePlus strokeWidth={1.5} className="w-5 h-5" />
+                </button>
+            </div>
+            <div className="space-y-1 h-full overflow-y-auto">
+                {tasks.length === 0 ? (
+                    <p className="text-white/70 text-xs italic">
+                        No tasks yet. Add one to get started.
+                    </p>
+                ) : (
+                    tasks.slice(0, 6).map((task, index) => (
                         <div
-                            key={idx}
-                            className={`max-w-[70%] rounded-lg px-4 py-1 text-sm ${
-                                msg.role === "user"
-                                    ? "ml-auto bg-transparent border border-white/30"
-                                    : "mr-auto bg-white/10 border border-white/20"
-                            }`}
+                            key={index}
+                            className="flex items-center justify-between inset-shadow-sm bg-black/20 rounded px-2 py-0.5 text-xs text-white rounded-lg"
                         >
-                            {msg.text}
+                            <span className="flex-1 text-left">{task}</span>
+                            <button onClick={() => completeTask(index)}>
+                                <Check className="w-4 h-4" />
+                            </button>
                         </div>
-                    ))}
-                </main>
-                <footer className="p-2 border-t border-white/10 flex gap-2">
-                    <input
-                        className="flex-1 rounded-full px-4 py-1 text-white text-sm bg-transparent border border-white/30"
+                    ))
+                )}
+            </div>
+        </div>
+    );
+    const ChatPanel = (
+        <div className="flex flex-col h-full justify-between">
+            <div className="flex-1 space-y-2 overflow-y-auto mb-[60px]">
+                {messages.length === 0 && (
+                    <p className="text-white/60 text-sm">
+                        Tell Gochi about your day.
+                    </p>
+                )}
+                {messages.map((msg, idx) => (
+                    <div
+                        key={idx}
+                        className={`w-fit max-w-[80%] text-sm mb-2 ${
+                            msg.role === "user"
+                                ? "ml-auto bg-transparent border border-white/30 rounded-lg px-2 py-0.5"
+                                : "mr-auto"
+                        }`}
+                    >
+                        {msg.role === "user" ? (
+                            msg.text
+                        ) : (
+                            <div className="flex items-start gap-2">
+                                <div className="">{getMoodEmoji()}</div>
+                                <span className="px-2 py-1 rounded-lg bg-white/10 border border-white/20">
+                                    {msg.text}
+                                </span>
+                            </div>
+                        )}
+                    </div>
+                ))}
+            </div>
+            <div className="absolute bottom-0 left-0 w-full bg-black/30 p-1">
+                <div className="flex gap-2">
+                    <textarea
+                        className="flex-1 rounded-lg px-2 py-0.5 text-white text-sm bg-black/20 inset-shadow-sm"
                         placeholder="Hi Gochi"
                         value={chatInput}
+                        rows={1}
                         onChange={(e) => setChatInput(e.target.value)}
-                        onKeyDown={(e) => e.key === "Enter" && handleChatSend()}
+                        onInput={(e) => {
+                            e.target.style.height = "auto";
+                            e.target.style.height = `${e.target.scrollHeight}px`;
+                        }}
+                        onKeyDown={(e) => {
+                            if (e.key === "Enter" && !e.shiftKey) {
+                                e.preventDefault();
+                                handleChatSend();
+                            }
+                        }}
                     />
                     <button
-                        className="px-4 py-1 rounded-full border border-white/30 text-sm font-semibold"
+                        className="p-1 rounded-full text-sm bg-black/20 inset-shadow-sm text-white border border-white/30"
                         onClick={handleChatSend}
                     >
-                        Send
+                        <ArrowUp className="w-4 h-4" />
                     </button>
-                </footer>
+                </div>
             </div>
-        );
-    }
-
+        </div>
+    );
     return (
-        <body
+        <div
             id="pet"
-            className="w-[350px] rounded-lg p-2 flex flex-col items-center justify-center"
+            className="w-[350px] h-[225px] rounded-lg p-2 bg-black/40 text-white space-y-2"
             style={{ "--wails-draggable": "drag" }}
         >
-            <div className="bg-black/30 rounded-lg p-2 flex flex-col items-center justify-center w-full">
-                <div className="flex gap-2 relative z-10 w-full">
-                    {/* <div className="flex items-center justify-center gap-2 border-2 rounded-full px-3 mx-auto w-fit">
-                        <span className="text-sm font-normal pr-1">{mood}</span>
-                    </div> */}
-
-                    <input
-                        type="text"
-                        className="w-full flex-1 px-2 border border-white/30 rounded-md text-sm text-white bg-transparent"
-                        placeholder="Add a new task..."
-                        value={inputValue}
-                        onChange={(e) => setInputValue(e.target.value)}
-                        onKeyPress={(e) => e.key === "Enter" && addTask()}
-                    />
-                    <button className="text-white" onClick={addTask}>
-                        <CirclePlus strokeWidth={1.5} className="w-5 h-5" />
-                    </button>
-                </div>
-
-                <div className="flex-1 overflow-y-auto grid grid-cols-[auto_1fr] items-center gap-2 w-full">
-                    <div className="w-20 h-20">{getMoodEmoji()}</div>
-                    {tasks.length === 0 ? (
-                        <p className="text-center text-white/80 text-sm italic">
-                            No tasks yet. Add one to get started.
-                        </p>
-                    ) : (
-                        <ul className="space-y-2 w-full py-2">
-                            {tasks.map((task, index) => (
-                                <li
-                                    key={index}
-                                    className="flex items-center justify-between border border-white/50 rounded px-2"
-                                >
-                                    <button
-                                        className="text-white"
-                                        onClick={() => completeTask(index)}
-                                        title="Mark as complete"
-                                    >
-                                        <Check className="w-4 h-4" />
-                                    </button>
-                                    <span className="flex-1 text-sm text-white text-right">
-                                        {task}
-                                    </span>
-                                </li>
-                            ))}
-                        </ul>
-                    )}
-                </div>
-
-                {/* <div className="text-center text-xs text-white/90 font-semibold py-1 rounded-md border border-white/20 relative z-10">
-                    {tasks.length} {tasks.length === 1 ? "task" : "tasks"}{" "}
-                    remaining
-                </div> */}
+            {TabNav}
+            <div className="rounded-lg overflow-hidden h-full">
+                {activeTab === "care" && CarePanel}
+                {activeTab === "tasks" && TasksPanel}
+                {activeTab === "chat" && ChatPanel}
             </div>
-            <p className="text-xs text-white pt-1">
-                *extend the window height to chat with Gochi
-            </p>
-        </body>
+        </div>
     );
 }
